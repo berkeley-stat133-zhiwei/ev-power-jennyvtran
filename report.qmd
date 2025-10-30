@@ -8,7 +8,14 @@ format: typst
 ## **Part 0: libraries**
 
 ```{r}
-
+library(tidyverse)
+library(stringr)
+library(maps)
+library(ggplot2)
+install.packages("usdata")
+library(usdata)
+install.packages("sf")
+library(sf)
 ```
 
 ## **Part 1:** **Defining Research Question**
@@ -18,17 +25,34 @@ Chosen Question:
 ## **Part 2: Data Preparation and Cleaning**
 
 ```{r}
-
+setwd("~/ev-power-jennyvtran/data")
+renew21 <- read_csv("total-use-2021.csv")|> slice(5) |> mutate(Energy_Source = str_remove(Energy_Source, "_energy"))
+renew22 <- read_csv("total-use-2022.csv")|> slice(5) |> mutate(Energy_Source = str_remove(Energy_Source, "s"))
+renew23 <- read_csv("total-use-2023.csv")|> slice(5) |> mutate(Energy_Source = Energy_Source |> str_to_lower () |> str_replace_all(" ", "_") |> str_remove("-energy"))
 ```
 
 ## **Part 3: Joining / Pivoting Datasets for Analysis**
 
 ```{r}
-
+# Pivot to make states one column and total renewable energy another column
+clean1 <- pivot_longer(renew21, cols = -Energy_Source, names_to = "state", values_to = "renewable_energy_21") |> select(-Energy_Source)
+clean2 <- pivot_longer(renew22, cols = -Energy_Source, names_to = "state", values_to = "renewable_energy_22") |> select(-Energy_Source)
+clean3 <- pivot_longer(renew23, cols = -Energy_Source, names_to = "state", values_to = "renewable_energy_23") |> select(-Energy_Source)
+# Join all tables together to have one table with states and their total renewable energy throughout years
+renew_all <- left_join(clean1, clean2, by = "state") |> left_join(clean3, by = "state")
+growth <- mutate(renew_all, growth = renewable_energy_23 - renewable_energy_21) |> mutate(state = tolower(abbr2state(state)))
 ```
 
 ## **Part 4: Mapping Visualization**
 
 ```{r}
-
+states_map <- map_data("state")
+plot_data <- states_map |> left_join(growth, by = c("region" = "state"))
+ggplot(plot_data, aes(long, lat, group = group, fill = growth)) +
++   geom_polygon(color = "white") +
++   scale_fill_viridis_c(na.value = "grey90") +
++   labs(
++     title = "Renewable Energy Growth (%) by State (2021–2023)",
++     fill = "% Growth"
++   ) + theme_minimal()
 ```
