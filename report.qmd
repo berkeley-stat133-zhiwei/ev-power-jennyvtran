@@ -40,7 +40,7 @@ clean2 <- pivot_longer(renew22, cols = -Energy_Source, names_to = "state", value
 clean3 <- pivot_longer(renew23, cols = -Energy_Source, names_to = "state", values_to = "renewable_energy_23") |> select(-Energy_Source)
 # Join all tables together to have one table with states and their total renewable energy throughout years
 renew_all <- left_join(clean1, clean2, by = "state") |> left_join(clean3, by = "state")
-growth <- mutate(renew_all, growth = renewable_energy_23 - renewable_energy_21) |> mutate(state = tolower(abbr2state(state)))
+growth <- mutate(renew_all, growth = ((renewable_energy_23 - renewable_energy_21)/renewable_energy_21)*100) |> mutate(state = tolower(abbr2state(state)))
 ```
 
 ## **Part 4: Mapping Visualization**
@@ -49,10 +49,12 @@ growth <- mutate(renew_all, growth = renewable_energy_23 - renewable_energy_21) 
 states_map <- map_data("state")
 plot_data <- states_map |> left_join(growth, by = c("region" = "state"))
 ggplot(plot_data, aes(long, lat, group = group, fill = growth)) +
-+   geom_polygon(color = "white") +
-+   scale_fill_viridis_c(na.value = "grey90") +
-+   labs(
-+     title = "Renewable Energy Growth (%) by State (2021–2023)",
-+     fill = "% Growth"
-+   ) + theme_minimal()
+  geom_polygon(color = "white") +
+  coord_fixed(1.3) +
+  scale_fill_viridis_c(option = "plasma", na.value = "grey90") +
+  labs(
+    title = "Renewable Energy Growth (%) by State (2021–2023)",
+    fill = "% Growth"
+  ) +
+  theme_void()
 ```
