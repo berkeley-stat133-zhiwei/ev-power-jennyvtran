@@ -58,3 +58,5 @@ ggplot(plot_data, aes(long, lat, group = group, fill = growth)) +
   ) +
   theme_void()
 ```
+
+I notuced that there is a variety of percent growth of renewable energy across the states. A vast majority of the states have a growth from 0% to around 10%. Western States seem to show strong growth, while southeast states show little to even negative growth. California has the highest percent growth out of all the states. 
